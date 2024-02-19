@@ -6,11 +6,6 @@ from scipy.io import loadmat
 
 sp.call('cls', shell=True) # clear the screen
 
-#defining neural network shape:
-input_layer_size  = 400
-hidden_layer_size = 25
-num_labels = 10
-
 print('Loading and Visualizing Data ...\n')
 
 #Loading Training Data:
@@ -26,27 +21,33 @@ randomRows = np.random.permutation(rows)
 selection = X[randomRows[0:100]]
 ml.displayData(selection)
 
+#defining neural network shape:
+inputLayerSize  = X.shape[1]
+hiddenLayerSize = 25
+labels = list(set(y.flatten())) #a list from unique values from y
+labelsSize = len(labels)
+
 #Random initialization of Neural Network Parameters:
 
-init_theta1 = ml.randInitWeights(input_layer_size, hidden_layer_size)
-init_theta2 = ml.randInitWeights(hidden_layer_size, num_labels)
-init_nn_params = np.append(init_theta1.flatten(), init_theta2.flatten()) #unroll parameters
+initTheta1 = ml.randInitWeights(inputLayerSize, hiddenLayerSize)
+initTheta2 = ml.randInitWeights(hiddenLayerSize, labelsSize)
+initNNParams = np.append(initTheta1.flatten(), initTheta2.flatten()) #unroll parameters
 
 print('Training neural network...')
 lam = 1 #lambda of cost function
-labels = list(set(y.flatten())) #a list from unique values from y
+#labels = list(set(y.flatten())) #a list from unique values from y
 
 #Cost function to optimize. (lam and lambda are not the same):
-function = lambda t: ml.nnCostFunction(t, input_layer_size, hidden_layer_size, labels, X, y, lam)
+function = lambda t: ml.nnCostFunction(t, inputLayerSize, hiddenLayerSize, labels, X, y, lam)
 
 #optimization:
-optim = minimize(fun = function, x0 = init_nn_params, method = 'TNC', jac = True, options = {'disp': True})
+optim = minimize(fun = function, x0 = initNNParams, method = 'TNC', jac = True, options = {'disp': True})
 cost = optim.fun
 nn_params = optim.x
 
 #roll parameters
-theta1 = nn_params[:hidden_layer_size * (input_layer_size + 1)].reshape(hidden_layer_size, (input_layer_size + 1))
-theta2 = nn_params[hidden_layer_size * (input_layer_size + 1):].reshape(num_labels, (hidden_layer_size + 1))
+theta1 = nn_params[:hiddenLayerSize * (inputLayerSize + 1)].reshape(hiddenLayerSize, (inputLayerSize + 1))
+theta2 = nn_params[hiddenLayerSize * (inputLayerSize + 1):].reshape(labelsSize, (hiddenLayerSize + 1))
 
 #Visualizing Neural Network
 ml.displayData(theta1[:,1:])

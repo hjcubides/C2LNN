@@ -1,23 +1,45 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.io import loadmat
 
-#Compute the sigmoid function
+#load file:
+def load(fileName):
+    if (fileName.split('.')[1] == 'mat'): 
+        dataSet = loadmat('./datasets/' + fileName)
+        X = dataSet['X']
+        y = dataSet['y']
+        if (fileName == 'handwritten_numbers.mat'): y[y==10]=0 #There are no images of '10' in this dataset there are images of '0' instead, so 10 is equivalent to 0.
+    else:
+        file = open('./datasets/'+ fileName, 'r')
+        data = file.read()
+        data = [a.split(",") for a in data.split()] #put data on an arrray
+        #separate parameters (X) from objective (y)
+        X = np.asarray([a[0:len(data[0])-1] for a in data])
+        y = np.asarray([a[len(data[0])-1] for a in data])
+        #removing labels and comments
+        X = X[1:len(X)-1,1:]
+        y = y[1:len(y)-1]
+        #convert parameters to float numbers
+        X = [[float(b) for b in a] for a in X]
+    return(np.asarray(X),np.asarray(y).reshape(-1,1))
+
+#Compute the sigmoid function:
 def sigmoid(z):
     g = 1/(1+np.power(np.exp(1),-z))
     return(g)
 
-#computes the gradient of the sigmoid function evaluated at z
+#computes the gradient of the sigmoid function evaluated at z:
 def sigmoidGradient(z):
     g = sigmoid(z)*(1-sigmoid(z))
     return(g)
 
-#randomly initializes the weights of a layer with L_in incoming connections and L_out outgoing connections.
+#randomly initializes the weights of a layer with L_in incoming connections and L_out outgoing connections:
 def randInitWeights(L_in, L_out):
     epsilon_init = 0.12
     W = np.random.rand(L_out, 1 + L_in) * 2 * epsilon_init - epsilon_init
     return(W)
 
-#cost function for a two layer neural network
+#cost function for a two layer neural network:
 def nnCostFunction(parameters, inputlayerSize, hiddenLayerSize, labels, X, y, lam): #lam is lambda
     #variables initilization:
     theta1 = parameters[:hiddenLayerSize * (inputlayerSize + 1)].reshape(hiddenLayerSize, (inputlayerSize + 1))
@@ -67,7 +89,7 @@ def nnCostFunction(parameters, inputlayerSize, hiddenLayerSize, labels, X, y, la
     grad = np.append(theta1_gradient.flatten(), theta2_gradient.flatten()).reshape(-1,1)
     return(cost, grad)
 
-#visualization tool
+#visualization tool:
 def displayData(X, cmap='gray', ax = plt):
     (m, n) = X.shape
     exampleWidth = int(np.round(np.sqrt(n)))
@@ -92,7 +114,7 @@ def displayData(X, cmap='gray', ax = plt):
     ax.imshow(itemsArrayToDisplay, cmap=cmap)
     plt.show()
 
-#Model Prediction
+#Model Prediction:
 def predict_nn(theta1, theta2, X):
     m = X.shape[0]
     X = np.c_[np.ones((m,1)),X] #Adding bias column to X

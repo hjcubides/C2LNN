@@ -25,11 +25,14 @@ while (dataSetAvailable == 0):
     except:
         print('Dataset not available.')
 
-#Random selection of 100 data points to display:
+#Randomizing of the dataset to handle sorted cases.
 rows = X.shape[0]
 randomRows = np.random.permutation(rows)
-selection = X[randomRows[0:100]]
+X = X[randomRows]
+y = y[randomRows]
 
+#Selection of 100 data points to display:
+selection = X[0:100] 
 display = 1 #Activate visualization by default 
 try:
     ml.displayData(selection)
@@ -37,11 +40,15 @@ except:
     display = 0
     print('Non-displayable data')
 
-#defining neural network shape:
+#Defining neural network shape:
 inputLayerSize  = X.shape[1]
 hiddenLayerSize = 25
 labels = list(set(y.flatten())) #a list from unique values from y
 labelsSize = len(labels)
+
+#Defining the data set segmentation (70-15-15):
+trainingLimit = round(len(X)*0.70) #Data limit to use for training
+validationLimit = round(len(X)*0.85) #Upper limit of data to use for validation. Lower limit is the training limit.
 
 #Random initialization of Neural Network Parameters:
 
@@ -52,7 +59,7 @@ initNNParams = np.append(initTheta1.flatten(), initTheta2.flatten()) #unroll par
 print('Training neural network...')
 lam = 1 #lambda of cost function
 #Cost function to optimize. (lam and lambda are not the same):
-function = lambda t: ml.nnCostFunction(t, inputLayerSize, hiddenLayerSize, labels, X, y, lam)
+function = lambda t: ml.nnCostFunction(t, inputLayerSize, hiddenLayerSize, labels, X[:trainingLimit], y[:trainingLimit], lam)
 
 #optimization:
 optim = minimize(fun = function, x0 = initNNParams, method = 'TNC', jac = True, options = {'disp': True})
@@ -68,18 +75,25 @@ theta2 = nn_params[hiddenLayerSize * (inputLayerSize + 1):].reshape(labelsSize, 
 if (display == 1): ml.displayData(theta1[:,1:])
 
 #Caculating Accuracy:
-p = ml.predict_nn(theta1, theta2, X) # predictions of the model.
+p = ml.predict_nn(theta1, theta2, X[:trainingLimit]) # predictions of the model.
 p = np.asarray(labels)[p].reshape(-1,1) #Formatting p to compare with y
-accuracy = np.mean((p == y)*1)*100
+accuracy = np.mean((p == y[:trainingLimit])*1)*100
 print('\nTraining Set Accuracy: ', accuracy, '\n')
 
-#validating model:
+p = ml.predict_nn(theta1, theta2, X[trainingLimit+1:validationLimit]) # predictions of the model.
+p = np.asarray(labels)[p].reshape(-1,1) #Formatting p to compare with y
+accuracy = np.mean((p == y[trainingLimit+1:validationLimit])*1)*100
+print('\nValidation Set Accuracy: ', accuracy, '\n')
 
-print('\nValidating Model...\n')
+#Testing:
 
-for i in range(rows):
+testSet = X[validationLimit+1:]
+
+print('\nTesting Model...\n')
+
+for i in range(len(testSet)):
     try:
-        Xi = X[randomRows[i],:].reshape(1,-1) #Selecting sample
+        Xi = testSet[i,:].reshape(1,-1) #Selecting sample
         if (display == 1): 
             ml.displayData(Xi)
             print('\033[F\033[F')

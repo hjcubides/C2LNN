@@ -5,6 +5,7 @@ from scipy.optimize import minimize
 from scipy.io import loadmat
 import sys
 import time
+import matplotlib.pyplot as plt
 
 sp.call('cls', shell=True) # clear the screen
 
@@ -34,8 +35,9 @@ y = y[randomRows]
 #Selection of 100 data points to display:
 selection = X[0:100] 
 display = 1 #Activate visualization by default 
+
 try:
-    ml.displayData(selection)
+    ml.displayData(selection, 'Random Selection')
 except:
     display = 0
     print('Non-displayable data')
@@ -62,7 +64,7 @@ lam = 1 #lambda of cost function
 function = lambda t: ml.nnCostFunction(t, inputLayerSize, hiddenLayerSize, labels, X[:trainingLimit], y[:trainingLimit], lam)
 
 #optimization:
-optim = minimize(fun = function, x0 = initNNParams, method = 'TNC', jac = True, options = {'disp': True})
+optim = minimize(fun = function, x0 = initNNParams, method = 'TNC', jac = True, options = {'disp': True, 'maxfun': 1000})
 cost = optim.fun
 nn_params = optim.x
 
@@ -70,9 +72,11 @@ nn_params = optim.x
 theta1 = nn_params[:hiddenLayerSize * (inputLayerSize + 1)].reshape(hiddenLayerSize, (inputLayerSize + 1))
 theta2 = nn_params[hiddenLayerSize * (inputLayerSize + 1):].reshape(labelsSize, (hiddenLayerSize + 1))
 
-#Visualizing Neural Network:
+#Visualizing trained model:
 
-if (display == 1): ml.displayData(theta1[:,1:])
+if (display == 1): 
+    print('\nVisualizing Neural Network:\n')
+    ml.displayData(theta1[:,1:], 'Trained Model')
 
 #Caculating Accuracy:
 p = ml.predict_nn(theta1, theta2, X[:trainingLimit]) # predictions of the model.
@@ -91,15 +95,19 @@ testSet = X[validationLimit+1:]
 
 print('\nTesting Model...\n')
 
+plt.ion() #enable interactive mode
+
 for i in range(len(testSet)):
     try:
         Xi = testSet[i,:].reshape(1,-1) #Selecting sample
+        p = ml.predict_nn(theta1, theta2, Xi)
         if (display == 1): 
-            ml.displayData(Xi)
+            titleText = 'Input image is ' + str(labels[p[0]])
+            ml.displayData(Xi, titleText)
+            plt.pause(1)
             print('\033[F\033[F')
         else: 
             print('\033[F\033[F\033[F\rNon-displayable data. Parameters are: \n', Xi, end='',flush=True)
-        p = ml.predict_nn(theta1, theta2, Xi)
         print('\rData objective is: ', labels[p[0]], '. \n\'ctrl-c\' to finish', end='',flush=True)
         time.sleep(1)
     except KeyboardInterrupt:

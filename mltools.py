@@ -90,7 +90,7 @@ def nnCostFunction(parameters, inputlayerSize, hiddenLayerSize, labels, X, y, la
     return(cost, grad)
 
 #visualization tool:
-def displayData(X, cmap='gray', ax = plt):
+def displayData(X, title, cmap='gray', ax = plt):
     (m, n) = X.shape
     exampleWidth = int(np.round(np.sqrt(n)))
     exampleHeight = int((n/exampleWidth))
@@ -110,7 +110,8 @@ def displayData(X, cmap='gray', ax = plt):
             cursorExample += 1
         if cursorExample > m-1:
             break
-
+    
+    plt.title(title)
     ax.imshow(itemsArrayToDisplay, cmap=cmap)
     plt.show()
 
